@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>IP Chat Ultra Pro Clone</title>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    :root{
+      --bg1:#0b1220;
+      --bg2:#111827;
+      --card:#111827cc;
+      --card2:#1f2937;
+      --line:rgba(255,255,255,.08);
+      --text:#f8fafc;
+      --muted:#94a3b8;
+      --green1:#22c55e;
+      --green2:#16a34a;
+      --blue1:#3b82f6;
+      --blue2:#2563eb;
+      --dark1:#2f3136;
+      --dark2:#111827;
+      --self:#2563eb;
+      --other:#1f2937;
+      --danger:#ef4444;
+      --warn:#f59e0b;
+    }
+    body{
+      font-family:Inter,Segoe UI,Arial,sans-serif;
+      background:radial-gradient(circle at top right,#1e3a8a 0%, transparent 25%), radial-gradient(circle at bottom left,#14532d 0%, transparent 22%), linear-gradient(135deg,var(--bg1),var(--bg2));
+      color:var(--text);
+      min-height:100vh;
+      padding:16px;
+    }
+    .app{max-width:1200px;margin:0 auto;display:grid;grid-template-columns:320px 1fr;gap:16px}
+    .card{background:var(--card);backdrop-filter:blur(18px);border:1px solid var(--line);border-radius:24px;box-shadow:0 20px 40px rgba(0,0,0,.35)}
+    .sidebar{padding:18px}
+    .brand{display:flex;align-items:center;gap:12px;margin-bottom:18px}
+    .logo{width:46px;height:46px;border-radius:16px;background:linear-gradient(135deg,var(--green1),var(--blue1));display:grid;place-items:center;font-weight:800;font-size:20px}
+    .brand h1{font-size:20px}
+    .brand p{font-size:12px;color:var(--muted)}
+    .section{background:rgba(255,255,255,.03);border:1px solid var(--line);border-radius:18px;padding:14px;margin-bottom:14px}
+    .label{font-size:12px;color:var(--muted);margin-bottom:8px;display:block}
+    input,textarea,button{font:inherit}
+    .input{width:100%;padding:12px 14px;border-radius:14px;border:1px solid var(--line);background:rgba(255,255,255,.05);color:var(--text);outline:none}
+    .input:focus{border-color:rgba(59,130,246,.5);box-shadow:0 0 0 3px rgba(59,130,246,.15)}
+    .row{display:flex;gap:10px}
+    .btn{border:none;border-radius:14px;padding:12px 14px;cursor:pointer;font-weight:700;transition:.2s ease;box-shadow:0 10px 20px rgba(0,0,0,.18)}
+    .btn:hover{transform:translateY(-1px)}
+    .btn.primary{background:linear-gradient(135deg,var(--green1),var(--green2));color:#fff}
+    .btn.secondary{background:linear-gradient(135deg,var(--blue1),var(--blue2));color:#fff}
+    .btn.dark{background:linear-gradient(135deg,var(--dark1),var(--dark2));color:#fff}
+    .btn.danger{background:linear-gradient(135deg,#ef4444,#b91c1c);color:#fff}
+    .chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+    .chip{padding:8px 10px;border-radius:999px;background:rgba(255,255,255,.05);border:1px solid var(--line);font-size:12px;cursor:pointer}
+    .members{display:flex;flex-direction:column;gap:8px;max-height:200px;overflow:auto}
+    .member{display:flex;justify-content:space-between;align-items:center;padding:10px 12px;border-radius:12px;background:rgba(255,255,255,.04);font-size:13px}
+    .dot{width:8px;height:8px;border-radius:50%;background:#22c55e;display:inline-block;margin-right:8px;box-shadow:0 0 10px #22c55e}
+    .status-line{font-size:12px;color:var(--muted);margin-top:6px}
+
+    .chat{display:flex;flex-direction:column;min-height:86vh;overflow:hidden}
+    .chat-header{padding:18px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+    .chat-title h2{font-size:20px}
+    .chat-title p{font-size:12px;color:var(--muted);margin-top:4px}
+    .header-actions{display:flex;gap:10px;flex-wrap:wrap}
+
+    .messages{padding:16px;display:flex;flex-direction:column;gap:12px;overflow:auto;flex:1;min-height:380px;background:linear-gradient(180deg,rgba(255,255,255,.02),rgba(255,255,255,.01))}
+    .empty{padding:24px;text-align:center;color:var(--muted);border:1px dashed var(--line);border-radius:18px}
+    .msg{max-width:75%;padding:12px;border-radius:18px;border:1px solid rgba(255,255,255,.06);box-shadow:0 10px 18px rgba(0,0,0,.14)}
+    .msg.self{align-self:flex-end;background:linear-gradient(135deg,#2563eb,#1d4ed8)}
+    .msg.other{align-self:flex-start;background:rgba(31,41,55,.95)}
+    .meta{font-size:11px;opacity:.8;margin-bottom:6px;display:flex;justify-content:space-between;gap:10px}
+    .body{font-size:14px;line-height:1.45;word-break:break-word}
+    .media{margin-top:8px}
+    .media img{max-width:100%;border-radius:14px;border:1px solid rgba(255,255,255,.08)}
+    .file-box{margin-top:8px;padding:10px;border-radius:14px;background:rgba(255,255,255,.08);display:flex;justify-content:space-between;align-items:center;gap:10px}
+    .file-box a{color:#fff;text-decoration:none;font-weight:700;font-size:12px;padding:8px 10px;border-radius:10px;background:rgba(255,255,255,.12)}
+
+    .composer-wrap{padding:14px;border-top:1px solid var(--line);background:rgba(255,255,255,.02)}
+    .quick-toolbar{display:flex;flex-wrap:wrap;gap:12px;align-items:center;padding:12px;margin-bottom:12px;border-radius:18px;background:rgba(255,255,255,.04);border:1px solid var(--line)}
+    .quick-btn{width:58px;height:58px;border:none;border-radius:18px;display:flex;align-items:center;justify-content:center;position:relative;cursor:pointer;transition:all .25s ease;box-shadow:0 12px 24px rgba(0,0,0,.22)}
+    .quick-btn:hover{transform:translateY(-3px) scale(1.05);filter:brightness(1.06)}
+    .quick-btn:active{transform:scale(.96)}
+    .quick-btn svg{width:30px;height:30px}
+    .quick-btn.green{background:linear-gradient(135deg,var(--green1),var(--green2))}
+    .quick-btn.blue{background:linear-gradient(135deg,var(--blue1),var(--blue2))}
+    .quick-btn.dark{background:linear-gradient(135deg,var(--dark1),var(--dark2))}
+    .mini-dot{position:absolute;right:9px;top:9px;width:8px;height:8px;border-radius:50%;background:#fff;box-shadow:0 0 0 2px rgba(255,255,255,.18)}
+    .composer{display:flex;gap:10px;align-items:flex-end}
+    .composer textarea{resize:none;min-height:52px;max-height:140px}
+    .composer .grow{flex:1}
+
+    .toast{position:fixed;bottom:20px;right:20px;background:#111827;border:1px solid var(--line);padding:12px 14px;border-radius:14px;box-shadow:0 14px 30px rgba(0,0,0,.3);display:none;z-index:9999}
+    .hidden{display:none}
+
+    @media (max-width:900px){
+      .app{grid-template-columns:1fr}
+      .chat{min-height:70vh}
+      .msg{max-width:88%}
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar card">
+      <div class="brand">
+        <div class="logo">IP</div>
+        <div>
+          <h1>IP Chat Ultra Pro</h1>
+          <p>Local Live Clone + Photo + File + Status</p>
+        </div>
+      </div>
+
+      <div class="section">
+        <label class="label">Your Name</label>
+        <input id="nameInput" class="input" placeholder="Enter your name" />
+        <label class="label" style="margin-top:10px">Room Code / IP</label>
+        <input id="roomInput" class="input" placeholder="e.g. 192.168.1.10 or room123" />
+        <div class="row" style="margin-top:10px">
+          <button id="joinBtn" class="btn primary" style="flex:1">Join Room</button>
+          <button id="leaveBtn" class="btn danger" style="flex:1">Leave</button>
+        </div>
+        <div class="chips">
+          <div class="chip" data-room="office-1">office-1</div>
+          <div class="chip" data-room="smt-line">smt-line</div>
+          <div class="chip" data-room="support-team">support-team</div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="row">
+          <button id="setStatusBtn" class="btn secondary" style="flex:1">Set Status</button>
+          <button id="copyRoomBtn" class="btn dark" style="flex:1">Copy Room</button>
+        </div>
+        <div class="status-line" id="myStatusText">Status: Available</div>
+      </div>
+
+      <div class="section">
+        <div class="label">Online Members</div>
+        <div class="members" id="membersList">
+          <div class="member"><span><span class="dot"></span>No one yet</span></div>
+        </div>
+      </div>
+    </aside>
+
+    <main class="chat card">
+      <div class="chat-header">
+        <div class="chat-title">
+          <h2 id="roomTitle">No room joined</h2>
+          <p id="roomSub">Join a room to start chatting in multiple tabs</p>
+        </div>
+        <div class="header-actions">
+          <button id="clearBtn" class="btn dark">Clear Chat</button>
+        </div>
+      </div>
+
+      <div class="messages" id="messages">
+        <div class="empty">Join the same room in 2 browser tabs for live testing. Photo, document, and status supported.</div>
+      </div>
+
+      <div class="composer-wrap">
+        <div class="quick-toolbar">
+          <button class="quick-btn green" id="quickTextBtn" title="Quick Text">
+            <svg viewBox="0 0 24 24" fill="none"><path d="M6 7.5h12M6 12h8M6 16.5h6" stroke="white" stroke-width="2" stroke-linecap="round"/><path d="M5 4h14a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H11l-4.5 3V17H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z" fill="rgba(255,255,255,.18)" stroke="white" stroke-width="1.5" stroke-linejoin="round"/></svg>
+            <span class="mini-dot"></span>
+          </button>
+          <button class="quick-btn blue" id="quickPhotoBtn" title="Send Photo">
+            <svg viewBox="0 0 24 24" fill="none"><path d="M4 7a2 2 0 0 1 2-2h3l1.2 1.6H18a2 2 0 0 1 2 2v7.5A2.5 2.5 0 0 1 17.5 18h-11A2.5 2.5 0 0 1 4 15.5V7Z" fill="rgba(255,255,255,.18)" stroke="white" stroke-width="1.5"/><circle cx="12" cy="12" r="3" stroke="white" stroke-width="1.8"/><circle cx="17" cy="9" r="1" fill="white"/></svg>
+            <span class="mini-dot"></span>
+          </button>
+          <button class="quick-btn dark" id="quickFileBtn" title="Send File">
+            <svg viewBox="0 0 24 24" fill="none"><path d="M8 4h6l4 4v10a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z" fill="rgba(255,255,255,.12)" stroke="white" stroke-width="1.6"/><path d="M14 4v4h4M9 12h6M9 15h4" stroke="white" stroke-width="1.8" stroke-linecap="round"/></svg>
+          </button>
+          <button class="quick-btn green" id="quickStatusBtn" title="Set Status">
+            <svg viewBox="0 0 24 24" fill="none"><path d="M12 21c4.97 0 9-4.03 9-9S16.97 3 12 3 3 7.03 3 12c0 1.63.43 3.15 1.2 4.47L3 21l4.68-1.15A8.96 8.96 0 0 0 12 21Z" fill="rgba(255,255,255,.15)" stroke="white" stroke-width="1.5"/><path d="M9 12h6" stroke="white" stroke-width="2" stroke-linecap="round"/></svg>
+            <span class="mini-dot"></span>
+          </button>
+        </div>
+
+        <div class="composer">
+          <textarea id="messageInput" class="input grow" placeholder="Type your message..."></textarea>
+          <input type="file" id="photoInput" accept="image/*" class="hidden" />
+          <input type="file" id="fileInput" class="hidden" />
+          <button id="sendBtn" class="btn primary">Send</button>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const state = {
+      room: '',
+      name: localStorage.getItem('ipchat_name') || '',
+      status: localStorage.getItem('ipchat_status') || 'Available',
+      sessionId: 'u_' + Math.random().toString(36).slice(2,9),
+      bc: null,
+      users: []
+    };
+
+    const nameInput = document.getElementById('nameInput');
+    const roomInput = document.getElementById('roomInput');
+    const joinBtn = document.getElementById('joinBtn');
+    const leaveBtn = document.getElementById('leaveBtn');
+    const setStatusBtn = document.getElementById('setStatusBtn');
+    const copyRoomBtn = document.getElementById('copyRoomBtn');
+    const clearBtn = document.getElementById('clearBtn');
+    const roomTitle = document.getElementById('roomTitle');
+    const roomSub = document.getElementById('roomSub');
+    const membersList = document.getElementById('membersList');
+    const messages = document.getElementById('messages');
+    const messageInput = document.getElementById('messageInput');
+    const photoInput = document.getElementById('photoInput');
+    const fileInput = document.getElementById('fileInput');
+    const sendBtn = document.getElementById('sendBtn');
+    const myStatusText = document.getElementById('myStatusText');
+    const toast = document.getElementById('toast');
+
+    const quickTextBtn = document.getElementById('quickTextBtn');
+    const quickPhotoBtn = document.getElementById('quickPhotoBtn');
+    const quickFileBtn = document.getElementById('quickFileBtn');
+    const quickStatusBtn = document.getElementById('quickStatusBtn');
+
+    nameInput.value = state.name;
+    myStatusText.textContent = 'Status: ' + state.status;
+
+    document.querySelectorAll('.chip').forEach(chip => {
+      chip.addEventListener('click', () => roomInput.value = chip.dataset.room);
+    });
+
+    function showToast(msg){
+      toast.textContent = msg;
+      toast.style.display = 'block';
+      setTimeout(() => toast.style.display = 'none', 1800);
+    }
+
+    function roomKey(){ return 'ipchat_room_' + state.room; }
+    function usersKey(){ return 'ipchat_users_' + state.room; }
+
+    function loadMessages(){
+      if(!state.room) return [];
+      return JSON.parse(localStorage.getItem(roomKey()) || '[]');
+    }
+    function saveMessages(list){
+      localStorage.setItem(roomKey(), JSON.stringify(list));
+    }
+    function loadUsers(){
+      if(!state.room) return [];
+      return JSON.parse(localStorage.getItem(usersKey()) || '[]');
+    }
+    function saveUsers(list){
+      localStorage.setItem(usersKey(), JSON.stringify(list));
+    }
+
+    function renderUsers(){
+      const users = loadUsers();
+      state.users = users;
+      if(!users.length){
+        membersList.innerHTML = '<div class="member"><span><span class="dot"></span>No one yet</span></div>';
+        return;
+      }
+      membersList.innerHTML = users.map(u => `
+        <div class="member">
+          <div><span class="dot"></span>${escapeHtml(u.name || 'Unknown')}</div>
+          <div style="font-size:11px;color:#94a3b8">${escapeHtml(u.status || 'Available')}</div>
+        </div>
+      `).join('');
+      roomSub.textContent = users.length + ' online · Local multi-tab live mode';
+    }
+
+    function escapeHtml(str=''){
+      return str.replace(/[&<>\"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+    }
+
+    function renderMessages(){
+      const list = loadMessages();
+      if(!list.length){
+        messages.innerHTML = '<div class="empty">No messages yet. Send text, photo, or file.</div>';
+        return;
+      }
+      messages.innerHTML = list.map(msg => {
+        const self = msg.sessionId === state.sessionId;
+        let extra = '';
+        if(msg.type === 'image'){
+          extra = `<div class="media"><img src="${msg.data}" alt="image" /></div>`;
+        } else if(msg.type === 'file'){
+          extra = `<div class="file-box"><div>${escapeHtml(msg.fileName || 'File')}</div><a href="${msg.data}" download="${escapeHtml(msg.fileName || 'file')}">OPEN</a></div>`;
+        }
+        return `
+          <div class="msg ${self ? 'self' : 'other'}">
+            <div class="meta"><span>${escapeHtml(msg.name)}</span><span>${msg.time}</span></div>
+            <div class="body">${msg.type === 'text' ? escapeHtml(msg.text) : escapeHtml(msg.text || '')}</div>
+            ${extra}
+          </div>
+        `;
+      }).join('');
+      messages.scrollTop = messages.scrollHeight;
+    }
+
+    function broadcast(payload){
+      if(state.bc) state.bc.postMessage(payload);
+    }
+
+    function connectChannel(){
+      if(state.bc) state.bc.close();
+      state.bc = new BroadcastChannel('ipchat_' + state.room);
+      state.bc.onmessage = (e) => {
+        const data = e.data || {};
+        if(data.type === 'refresh'){
+          renderMessages();
+          renderUsers();
+        }
+      };
+    }
+
+    function joinRoom(){
+      const name = nameInput.value.trim();
+      const room = roomInput.value.trim();
+      if(!name || !room) return showToast('Name and room required');
+      state.name = name;
+      state.room = room;
+      localStorage.setItem('ipchat_name', name);
+      connectChannel();
+      roomTitle.textContent = room;
+      roomSub.textContent = 'Connecting...';
+      const users = loadUsers().filter(u => u.sessionId !== state.sessionId);
+      users.push({sessionId: state.sessionId, name: state.name, status: state.status});
+      saveUsers(users);
+      renderUsers();
+      renderMessages();
+      broadcast({type:'refresh'});
+      showToast('Joined ' + room);
+    }
+
+    function leaveRoom(){
+      if(!state.room) return;
+      const users = loadUsers().filter(u => u.sessionId !== state.sessionId);
+      saveUsers(users);
+      broadcast({type:'refresh'});
+      if(state.bc) state.bc.close();
+      state.bc = null;
+      state.room = '';
+      roomTitle.textContent = 'No room joined';
+      roomSub.textContent = 'Join a room to start chatting in multiple tabs';
+      membersList.innerHTML = '<div class="member"><span><span class="dot"></span>No one yet</span></div>';
+      messages.innerHTML = '<div class="empty">Join the same room in 2 browser tabs for live testing. Photo, document, and status supported.</div>';
+      showToast('Left room');
+    }
+
+    function sendText(){
+      if(!state.room) return showToast('Join room first');
+      const text = messageInput.value.trim();
+      if(!text) return;
+      const list = loadMessages();
+      list.push({type:'text', text, name:state.name, sessionId:state.sessionId, time:new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})});
+      saveMessages(list);
+      messageInput.value = '';
+      renderMessages();
+      broadcast({type:'refresh'});
+    }
+
+    function sendImage(file){
+      if(!state.room) return showToast('Join room first');
+      if(file.size > 5 * 1024 * 1024) return showToast('Image max 5MB');
+      const reader = new FileReader();
+      reader.onload = () => {
+        const list = loadMessages();
+        list.push({type:'image', text:'📷 Photo', data:reader.result, name:state.name, sessionId:state.sessionId, time:new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})});
+        saveMessages(list);
+        renderMessages();
+        broadcast({type:'refresh'});
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function sendFile(file){
+      if(!state.room) return showToast('Join room first');
+      if(file.size > 10 * 1024 * 1024) return showToast('File max 10MB');
+      const reader = new FileReader();
+      reader.onload = () => {
+        const list = loadMessages();
+        list.push({type:'file', text:'📄 Document', fileName:file.name, data:reader.result, name:state.name, sessionId:state.sessionId, time:new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})});
+        saveMessages(list);
+        renderMessages();
+        broadcast({type:'refresh'});
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function setStatus(){
+      const value = prompt('Set your status', state.status || 'Available');
+      if(value === null) return;
+      state.status = value.trim() || 'Available';
+      localStorage.setItem('ipchat_status', state.status);
+      myStatusText.textContent = 'Status: ' + state.status;
+      if(state.room){
+        const users = loadUsers().map(u => u.sessionId === state.sessionId ? {...u, status: state.status, name: state.name} : u);
+        saveUsers(users);
+        renderUsers();
+        broadcast({type:'refresh'});
+      }
+      showToast('Status updated');
+    }
+
+    joinBtn.addEventListener('click', joinRoom);
+    leaveBtn.addEventListener('click', leaveRoom);
+    sendBtn.addEventListener('click', sendText);
+    setStatusBtn.addEventListener('click', setStatus);
+    quickStatusBtn.addEventListener('click', setStatus);
+    clearBtn.addEventListener('click', () => {
+      if(!state.room) return showToast('Join room first');
+      localStorage.removeItem(roomKey());
+      renderMessages();
+      broadcast({type:'refresh'});
+      showToast('Chat cleared');
+    });
+    copyRoomBtn.addEventListener('click', async () => {
+      const room = roomInput.value.trim() || state.room;
+      if(!room) return showToast('No room to copy');
+      try{ await navigator.clipboard.writeText(room); showToast('Room copied'); } catch { showToast('Copy failed'); }
+    });
+
+    messageInput.addEventListener('keydown', (e) => {
+      if(e.key === 'Enter' && !e.shiftKey){ e.preventDefault(); sendText(); }
+    });
+
+    photoInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if(file) sendImage(file);
+      e.target.value = '';
+    });
+    fileInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if(file) sendFile(file);
+      e.target.value = '';
+    });
+
+    quickTextBtn.addEventListener('click', () => messageInput.focus());
+    quickPhotoBtn.addEventListener('click', () => photoInput.click());
+    quickFileBtn.addEventListener('click', () => fileInput.click());
+
+    window.addEventListener('beforeunload', () => {
+      if(state.room){
+        const users = loadUsers().filter(u => u.sessionId !== state.sessionId);
+        saveUsers(users);
+        broadcast({type:'refresh'});
+      }
+    });
+  </script>
+</body>
+</html>
